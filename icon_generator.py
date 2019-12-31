@@ -2,7 +2,7 @@ import noise
 import turtle
 import numpy as np
 from PIL import Image
-from scipy import interpolate
+import colorsys as cs
 
 # inp = int(input())
 # np.random.seed(7777)
@@ -49,6 +49,14 @@ class Board:
         np.array([88, 31, 24])
     ]
 
+    palette3 = [
+        np.array([156, 255, 250]),
+        np.array([172, 243, 157]),
+        np.array([176, 197, 146]),
+        np.array([169, 124, 115]),
+        np.array([175, 62, 77])
+    ]
+
     board = None
     width = 0
     height = 0
@@ -61,21 +69,25 @@ class Board:
 
     
 
-    def gen_icon(self):
-        generations = 10 * 10
+    def gen_random(self):
+        generations = 10 * 3
         kernel = 3
         p = 0.8
         aux_matrix = self.board.copy()
 
         bool_matrix = np.random.choice(a=[False, True], size=(self.width, self.height), p=[p, 1-p])
         
-        self.board[self.width // 4 : 3 * self.width // 4, self.height // 4 : 3 * self.height // 4] = bool_matrix[self.width // 4 : 3 * self.width // 4, self.height // 4 : 3 * self.height // 4]
+        margin = 10
+
+        self.board[self.width // margin : (margin - 1) * self.width // margin, 
+        self.height // margin : (margin - 1) * self.height // margin] = bool_matrix[self.width // margin : (margin - 1) * self.width // margin, 
+                                                                                    self.height // margin : (margin - 1) * self.height // margin]
         self.board[self.board == True] = 255
 
         
         for _ in range(generations):
-            for i in range((self.width // 4) + kernel // 2, (3 * self.width // 4) - kernel // 2):
-                for j in range((self.height // 4) + kernel // 2, (3 * self.height // 4) - kernel // 2):
+            for i in range((self.width // margin) + kernel // 2, ((margin - 1) * self.width // margin) - kernel // 2):
+                for j in range((self.height // margin) + kernel // 2, ((margin - 1) * self.height // margin) - kernel // 2):
 
                     subm = self.board[i - kernel // 2 : i + kernel // 2 + 1,
                                       j - kernel // 2 : j + kernel // 2 + 1]
@@ -91,50 +103,60 @@ class Board:
 
             self.board = aux_matrix
 
-        ncells_array = []
-        for i in range(kernel // 2, self.width - kernel // 2):
-            for j in range(kernel // 2, self.height - kernel // 2):
-                
-                subm = self.board[i - kernel // 2 : i + kernel // 2 + 1,
-                                  j - kernel // 2 : j + kernel // 2 + 1]
-
-                ncells_array.append(np.count_nonzero(subm))    
-        
         board.colorize()
 
         
+    def generate_colors(self):
+        random_hue = np.random.rand()
+        random_saturation = np.random.rand()
+        base_color = (random_hue, random_saturation, 100)
+        cs.hls_to_rgb(base_color[0], base_color[1], base_color[2])
 
     def colorize(self):
+        pal = self.palette1
+       
         # reshaping
         new_matrix = np.zeros((self.width, self.height, 3), 'uint8')
         
         new_matrix[self.board == 255] = self.colors['white']
-        # new_matrix[self.board == 127] = self.darkSand
-        # new_matrix[self.board == 20] = self.fruitColor
-        new_matrix[self.board == 0] = self.colors['lightSand']
+        new_matrix[self.board == 0] = pal[4]
 
         self.board = new_matrix
         del new_matrix
 
         aux_matrix = self.board
         kernel = 3
-        avg = []
+        margin = 10
 
-        for i in range(kernel // 2, self.width - kernel // 2):
-            for j in range(kernel // 2, self.height - kernel // 2):
+        
+        # stats = np.array([])
+        for i in range((self.width // margin) + kernel // 2, ((margin - 1) * self.width // margin) - kernel // 2):
+            for j in range((self.height // margin) + kernel // 2, ((margin - 1) * self.height // margin) - kernel // 2):
 
-                subm = self.board[i - kernel // 2 : i + kernel // 2 + 1,
-                                  j - kernel // 2 : j + kernel // 2 + 1]
+                if np.array_equiv(self.board[i, j], self.colors['white']):
+                    val = noise.pnoise2(i, j, octaves=4, lacunarity=0.23, persistence=2)
+                    # stats = np.append(stats, val)
 
-                n_cells = np.count_nonzero(subm) // 3
-                
-                if np.array_equiv(self.board[i, j], self.colors['white']): n_cells -= 1
+                    
 
-                if np.array_equiv(self.board[i, j], self.colors['white']) and n_cells > 2   :
-                    aux_matrix[i, j] = self.palette2[np.random.randint(len(self.palette2))]
-
+                    if val > -0.5 and val <= -0.25:
+                        aux_matrix[i, j] = pal[0]
+                    elif val > -0.25 and val <= 0:
+                        aux_matrix[i, j] = pal[1]
+                    elif val > 0 and val <= 0.25:
+                        aux_matrix[i, j] = pal[2]
+                    elif val > 0.25 and val <= 0.5:
+                        aux_matrix[i, j] = pal[3]
+                        
         self.board = aux_matrix
-        # print('Average', np.average(avg), 'Deviation', np.std(avg), 'Max', np.max(avg))
+        # print(self.board)
+        # print(len(stats))
+        # print("Max:", stats.max(), "min:", stats.min(), "mean:", stats.mean())
+
+
+    def gen_flower(self):
+        pass
+
 
     def display(self):
         img = Image.fromarray(self.board)
@@ -145,6 +167,6 @@ class Board:
 
 
 if __name__ == "__main__":
-    board = Board(80, 80)
-    board.gen_icon()
+    board = Board(200, 200)
+    board.gen_random()
     board.display()
