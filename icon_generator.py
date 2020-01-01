@@ -3,9 +3,10 @@ import turtle
 import numpy as np
 from PIL import Image
 import colorsys as cs
+import math
 
-# inp = int(input())
-# np.random.seed(7777)
+seed = np.random.randint(120498)
+np.random.seed(seed)
 
 def map_lerp(n, start1, stop1, start2, stop2):
     return ((n-start1)/(stop1-start1))*(stop2-start2)+start2
@@ -70,14 +71,16 @@ class Board:
     
 
     def gen_random(self):
-        generations = 10 * 3
+        generations = 10 * np.random.randint(2, 21)
+        print("Generations: ", generations)
         kernel = 3
-        p = 0.8
+        p = np.random.rand()
+        print("Initial probability dist: ", p)
         aux_matrix = self.board.copy()
 
         bool_matrix = np.random.choice(a=[False, True], size=(self.width, self.height), p=[p, 1-p])
         
-        margin = 10
+        margin = np.random.randint(5, 16)
 
         self.board[self.width // margin : (margin - 1) * self.width // margin, 
         self.height // margin : (margin - 1) * self.height // margin] = bool_matrix[self.width // margin : (margin - 1) * self.width // margin, 
@@ -107,66 +110,83 @@ class Board:
 
         
     def generate_colors(self):
+        colors = []
+        
         random_hue = np.random.rand()
         random_saturation = np.random.rand()
-        base_color = (random_hue, random_saturation, 100)
-        cs.hls_to_rgb(base_color[0], base_color[1], base_color[2])
+        # random_value = np.clip(np.random.rand() + 0.25, 0, 1)
+        # print("Value: ", random_value)
+        base_color = np.array([random_hue, random_saturation, 1])
+        colors.append(base_color)
+        
+        for _ in range(4):
+            new_hue = math.fmod(base_color[0] + np.random.rand(), 1)
+            new_sat = math.fmod(base_color[1] + np.random.rand(), 1)
+            col = np.array([new_hue, new_sat, 1])
+            
+            colors.append(col)
+
+        output = []
+        for color in colors:
+            rgb_color = cs.hls_to_rgb(color[0], color[1], color[2])
+            rgb_color = np.array([rgb_color[0], rgb_color[1], rgb_color[2]])
+            rgb_color = (rgb_color * 255).astype(int)
+            
+            output.append(rgb_color)
+
+        hue = lambda color: color[0]
+        output.sort(key=hue)
+        return output
+
 
     def colorize(self):
-        pal = self.palette1
+        pal = self.generate_colors()
+        print("Colors: ", pal)
+
        
         # reshaping
         new_matrix = np.zeros((self.width, self.height, 3), 'uint8')
         
         new_matrix[self.board == 255] = self.colors['white']
-        new_matrix[self.board == 0] = pal[4]
+        new_matrix[self.board == 0] = pal[0]
 
         self.board = new_matrix
         del new_matrix
 
         aux_matrix = self.board
         kernel = 3
-        margin = 10
+        margin = np.random.randint(5, 16)
 
         
-        # stats = np.array([])
+
         for i in range((self.width // margin) + kernel // 2, ((margin - 1) * self.width // margin) - kernel // 2):
             for j in range((self.height // margin) + kernel // 2, ((margin - 1) * self.height // margin) - kernel // 2):
 
                 if np.array_equiv(self.board[i, j], self.colors['white']):
                     val = noise.pnoise2(i, j, octaves=4, lacunarity=0.23, persistence=2)
-                    # stats = np.append(stats, val)
-
-                    
 
                     if val > -0.5 and val <= -0.25:
-                        aux_matrix[i, j] = pal[0]
-                    elif val > -0.25 and val <= 0:
                         aux_matrix[i, j] = pal[1]
-                    elif val > 0 and val <= 0.25:
+                    elif val > -0.25 and val <= 0:
                         aux_matrix[i, j] = pal[2]
-                    elif val > 0.25 and val <= 0.5:
+                    elif val > 0 and val <= 0.25:
                         aux_matrix[i, j] = pal[3]
+                    elif val > 0.25 and val <= 0.5:
+                        aux_matrix[i, j] = pal[4]
                         
         self.board = aux_matrix
-        # print(self.board)
-        # print(len(stats))
-        # print("Max:", stats.max(), "min:", stats.min(), "mean:", stats.mean())
-
-
-    def gen_flower(self):
-        pass
 
 
     def display(self):
         img = Image.fromarray(self.board)
         img = img.resize((800, 800))
+        # img.save("imgs/"+str(seed)+".png")
         img.show()
-        # img.save(f'imgs/{inp}.png')
+        
 
 
 
 if __name__ == "__main__":
-    board = Board(200, 200)
+    board = Board(100, 100)
     board.gen_random()
     board.display()
