@@ -5,8 +5,10 @@ from PIL import Image
 import colorsys as cs
 import math
 import random
+from cv2 import threshold, imwrite, THRESH_BINARY, THRESH_OTSU
 
 seed = np.random.randint(120498)
+print("Seed:", seed)
 np.random.seed(seed)
 random.seed(seed)
 
@@ -27,10 +29,12 @@ class Board:
     def gen_random(self):
         kernel = 3
 
-        generations = 10 * np.random.randint(2, 21)
+        # generations = 10 * np.random.randint(2, 21)
+        generations = 10 * 3
         print("Generations: ", generations)
         
-        p = random.uniform(0.3, 1)
+        # p = random.uniform(0.3, 0.7)
+        p = 0.456
         print("Initial probability dist: ", p)
 
         aux_matrix = self.board.copy()
@@ -68,18 +72,19 @@ class Board:
     def generate_colors(self):
         colors = []
         
-        random_hue = np.random.rand()
-        random_saturation = np.random.rand()
-        random_value = random.uniform(0.25, 1)
+        random_hue = random.uniform(0, 1)
+        random_saturation = random.uniform(0, 0.6)
+        random_value = random.uniform(0, 0.6)
         
         base_color = np.array([random_hue, random_saturation, random_value])
         colors.append(base_color)
         
-        for _ in range(4):
-            new_hue = math.fmod(base_color[0] + random.uniform(-.35, .35), 1)
-            new_sat = math.fmod(base_color[1] + random.uniform(-.35, .35), 1)
-            new_val = math.fmod(base_color[2] + random.uniform(-.35, .35), 1)
+        for i in range(4):
+            new_hue = abs(base_color[0] + random.uniform(-0.05, 0.05))
+            new_sat = abs(base_color[1] + random.uniform(0, .65))
+            new_val = abs(base_color[2] + random.uniform(0, 1))
             col = np.array([new_hue, new_sat, new_val])
+            print("Color "+str(i)+":", col)
             
             colors.append(col)
 
@@ -92,20 +97,20 @@ class Board:
             output.append(rgb_color)
 
         sort_criteria = lambda color: 0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2]
+        # sort_criteria = lambda color: color[0] + color[1] + color[2]
+        
         output.sort(key=sort_criteria)
-
         return output
 
 
     def colorize(self, margin):
-        pal = self.generate_colors()
-
+        palette = self.generate_colors()
        
         # reshaping
         new_matrix = np.zeros((self.width, self.height, 3), 'uint8')
         
         new_matrix[self.board == 255] = [255, 255, 255]
-        new_matrix[self.board == 0] = pal[0]
+        new_matrix[self.board == 0] = palette[0]
 
         self.board = new_matrix
         del new_matrix
@@ -117,25 +122,23 @@ class Board:
             for j in range((self.height // margin) + kernel // 2, ((margin - 1) * self.height // margin) - kernel // 2):
 
                 if np.array_equiv(self.board[i, j], [255, 255, 255]):
-                    val = noise.pnoise2(i, j, octaves=4, lacunarity=0.23, persistence=2)
+                    val = noise.pnoise2(i, j, octaves=6, lacunarity=0.63, persistence=2)
 
                     if val > -0.5 and val <= -0.25:
-                        aux_matrix[i, j] = pal[1]
+                        aux_matrix[i, j] = palette[1]
                     elif val > -0.25 and val <= 0:
-                        aux_matrix[i, j] = pal[2]
+                        aux_matrix[i, j] = palette[2]
                     elif val > 0 and val <= 0.25:
-                        aux_matrix[i, j] = pal[3]
+                        aux_matrix[i, j] = palette[3]
                     elif val > 0.25 and val <= 0.5:
-                        aux_matrix[i, j] = pal[4]
+                        aux_matrix[i, j] = palette[4]
                         
         self.board = aux_matrix
-        self.board[0:5, 0:1] = [2, 2, 2]
-        self.board[0:1, 0:5] = [2, 2, 2]
-        self.board[0:5, 0:5] = pal[0]
-        self.board[5:10, 0:5] = pal[1]
-        self.board[10:15, 0:5] = pal[2]
-        self.board[15:20, 0:5] = pal[3]
-        self.board[20:25, 0:5] = pal[4]
+        self.board[0:3, 0:3] = palette[0]
+        self.board[0:3, 3:6] = palette[1]
+        self.board[0:3, 6:9] = palette[2]
+        self.board[0:3, 9:12] = palette[3]
+        self.board[0:3, 12:15] = palette[4]
 
 
 
