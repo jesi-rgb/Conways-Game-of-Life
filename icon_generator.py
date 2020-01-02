@@ -74,15 +74,15 @@ class Board:
         
         random_hue = random.uniform(0, 1)
         random_saturation = random.uniform(0, 0.6)
-        random_value = random.uniform(0, 0.6)
+        random_value = random.uniform(0, 0.3)
         
         base_color = np.array([random_hue, random_saturation, random_value])
         colors.append(base_color)
         
         for i in range(4):
-            new_hue = abs(base_color[0] + random.uniform(-0.05, 0.05))
-            new_sat = abs(base_color[1] + random.uniform(0, .65))
-            new_val = abs(base_color[2] + random.uniform(0, 1))
+            new_hue = base_color[0] + random.uniform(0.03, 0.04)
+            new_sat = random.uniform(0, 1)
+            new_val = base_color[2] + random.uniform(0.3, 0.7)
             col = np.array([new_hue, new_sat, new_val])
             print("Color "+str(i)+":", col)
             
@@ -97,9 +97,9 @@ class Board:
             output.append(rgb_color)
 
         sort_criteria = lambda color: 0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2]
-        # sort_criteria = lambda color: color[0] + color[1] + color[2]
         
         output.sort(key=sort_criteria)
+        print(output)
         return output
 
 
