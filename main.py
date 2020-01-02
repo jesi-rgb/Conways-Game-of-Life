@@ -5,7 +5,6 @@ import turtle
 
 import noise
 import numpy as np
-from cv2 import THRESH_BINARY, THRESH_OTSU, imwrite, threshold
 from PIL import Image
 
 # set a random seed that will be displayed to name the final file with it.
