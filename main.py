@@ -181,14 +181,14 @@ class Board:
         # We now generate a matrix of tuples, to store 24-bit colors, instead of single gray values.
         new_matrix = np.zeros((self.width, self.height, 3), 'uint8')
         
-        # Whatever was white, it is 3 times white. If you recall, only live cells are white.
+        # Whatever was white, it is 3 times whiter. If you recall, only alive cells are white.
         new_matrix[self.board == 255] = [255, 255, 255]
 
         # For the background (dead cells), we use the first color on the palette, 
-        # which will hopefully be the darker one, since we sorted them.
+        # which will hopefully be the darker one, since we previously sorted them.
         new_matrix[self.board == 0] = palette[0]
 
-        # We overwrite our matrix with the new one, and delete the scaffolding.
+        # We overwrite our matrix with the new one and delete the scaffolding.
         self.board = new_matrix
         del new_matrix
 
