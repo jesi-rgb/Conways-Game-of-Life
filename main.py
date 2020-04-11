@@ -40,13 +40,13 @@ class Board:
 
         # Generations to be run. The more we run, the further it goes in the simulation, providing an ever increasing
         # chaos.
-        generations = 10 * np.random.randint(2, 5)
+        generations = 10 * np.random.randint(2, 20)
         print("Generations: ", generations)
         
         # Probability distribution for the initial state of the board we are going to run our program on.
         # This is used down in bool_matrix, where p is the probability that the cell is true (white and alive)
         # or false (black and dead).
-        p = random.uniform(0.4, 0.5)
+        p = random.uniform(0.5, 0.6)
         print("Initial probability dist: ", p, "\n\n")
 
 
@@ -219,29 +219,29 @@ class Board:
         self.board = aux_matrix
 
         # This block essentially draws the palette on the upper left corner.
-        self.board[0:3, 0:3] = palette[0]
-        self.board[0:3, 3:6] = palette[1]
-        self.board[0:3, 6:9] = palette[2]
-        self.board[0:3, 9:12] = palette[3]
-        self.board[0:3, 12:15] = palette[4]
+        self.board[0:1, 0:1] = palette[0]
+        self.board[0:1, 1:2] = palette[1]
+        self.board[0:1, 2:3] = palette[2]
+        self.board[0:1, 3:4] = palette[3]
+        self.board[0:1, 4:5] = palette[4]
 
 
 
     def display(self):
         # Helper function to display and save the final image. We start with low resolution
         # images and then scale them up to get that pixel-art look (which I absolutely love)
-        SCALE_FACTOR = 4
+        SCALE_FACTOR = 16
         img = Image.fromarray(self.board)
         img = img.resize((self.height * SCALE_FACTOR, self.width * SCALE_FACTOR))
         
-        img.save("imgs/"+str(seed)+".png")
+        # img.save("imgs/"+str(seed)+".png")
         img.show()
         
 
 
 # Main program where we call everything we just explained.
 if __name__ == "__main__":
-    board = Board(200, 200)
+    board = Board(32, 32)
     board.gen_random()
     board.display()
     print("\n***Program finished***\n\n\n")
