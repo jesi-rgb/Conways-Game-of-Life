@@ -1,10 +1,12 @@
 import colorsys as cs
 import math
 import random
-import turtle
+
 
 import noise
 import numpy as np
+
+import cv2 as cv
 from PIL import Image
 
 # set a random seed that will be displayed to name the final file with it.
@@ -40,13 +42,13 @@ class Board:
 
         # Generations to be run. The more we run, the further it goes in the simulation, providing an ever increasing
         # chaos.
-        generations = 10 * np.random.randint(2, 20)
+        generations = 10 * np.random.randint(10, 20)
         print("Generations: ", generations)
         
         # Probability distribution for the initial state of the board we are going to run our program on.
         # This is used down in bool_matrix, where p is the probability that the cell is true (white and alive)
         # or false (black and dead).
-        p = random.uniform(0.5, 0.6)
+        p = random.uniform(0.45, 0.55)
         print("Initial probability dist: ", p, "\n\n")
 
 
@@ -115,6 +117,7 @@ class Board:
 
         # We may now apply some fancy coloring to our black and white board.
         board.colorize(margin)
+        self.open_close()
 
         
     def generate_colors(self):
@@ -226,6 +229,21 @@ class Board:
         self.board[0:1, 4:5] = palette[4]
 
 
+    def open_close(self):
+        # Specify Kernel Size
+        kernelSize = 1
+        # Create the Kernel
+        element = cv.getStructuringElement(cv.MORPH_ELLIPSE, (2*kernelSize+1, 2*kernelSize+1),(kernelSize, kernelSize))
+        element_h = np.array([ [1, 0, 0],
+                               [1, 1, 1],
+                               [0, 0, 1]], dtype=np.uint8)
+        element_v = np.array([ [0, 1, 1],
+                               [0, 1, 0],
+                               [1, 1, 0]], dtype=np.uint8)
+        element_u = np.array([1], dtype=np.uint8)
+        # Perform Erosion
+        self.board = cv.dilate(self.board, element_u, iterations=1)
+        self.board = cv.erode(self.board, element_u, iterations=1)
 
     def display(self):
         # Helper function to display and save the final image. We start with low resolution
@@ -241,7 +259,8 @@ class Board:
 
 # Main program where we call everything we just explained.
 if __name__ == "__main__":
-    board = Board(32, 32)
+    board = Board(200, 200)
     board.gen_random()
+    # board.open_close()
     board.display()
     print("\n***Program finished***\n\n\n")
